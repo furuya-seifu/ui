@@ -1,6 +1,6 @@
 // Supabase初期化
-const SUPABASE_URL = 'https://sdbkvffthxyxwecldhis.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkYmt2ZmZ0aHh5eHdlY2xkaGlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzOTk4NDcsImV4cCI6MjA2Mzk3NTg0N30.uVVoVXdaDmUHfBzK_QQ-o0lutuzbDeZIIGgFTc-fkZU';
+const SUPABASE_URL = 'https://vguesgqyjpohphmeyiaf.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZndWVzZ3F5anBvaHBobWV5aWFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzOTc2ODAsImV4cCI6MjA2Mzk3MzY4MH0.JZes7O8Q3naGO7RAHzCpIJ4NMRvHkmgw1fCfGLN4MUM';
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const APP_PREFIX = 'coupleApp_';
