@@ -1,3 +1,9 @@
+// Supabase初期化
+const SUPABASE_URL = 'https://sdbkvffthxyxwecldhis.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkYmt2ZmZ0aHh5eHdlY2xkaGlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzOTk4NDcsImV4cCI6MjA2Mzk3NTg0N30.uVVoVXdaDmUHfBzK_QQ-o0lutuzbDeZIIGgFTc-fkZU';
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+
 const APP_PREFIX = 'coupleApp_';
 
 // 各セクションのデータを管理するオブジェクト
