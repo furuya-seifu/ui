@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ふたりのハーモニーアシスタント</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ふたりのハーモニーアシスタント</h1>
+            <p>お互いの気持ちを共有し、より良い関係を築きましょう。</p>
+        </header>
+
+        <!-- 感謝の言葉セクション -->
+        <div class="section" id="gratitude-section">
+            <h2><span role="img" aria-label="sparkling heart">💖</span> 感謝の言葉</h2>
+            <textarea id="gratitude-input" placeholder="日頃の感謝を伝えよう（例：いつも美味しいご飯ありがとう！）"></textarea>
+            <button onclick="addItem('gratitude')">追加する</button>
+            <ul id="gratitude-list"></ul>
+        </div>
+
+        <!-- 話し合いたいことセクション -->
+        <div class="section" id="discussion-section">
+            <h2><span role="img" aria-label="speech balloon">💬</span> 話し合いたいこと</h2>
+            <textarea id="discussion-input" placeholder="落ち着いて話したいことをメモしよう（例：週末の過ごし方について）"></textarea>
+            <button onclick="addItem('discussion')">追加する</button>
+            <ul id="discussion-list"></ul>
+        </div>
+
+        <!-- 共有タスクセクション -->
+        <div class="section" id="tasks-section">
+            <h2><span role="img" aria-label="clipboard">📋</span> 共有タスク</h2>
+            <input type="text" id="task-input" placeholder="やるべきこと、お願いしたいタスク（例：牛乳を買ってくる）">
+            <button onclick="addItem('task')">追加する</button>
+            <ul id="task-list"></ul>
+        </div>
+        
+        <button class="clear-all-btn" onclick="clearAllData()">全てのデータをリセット</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
