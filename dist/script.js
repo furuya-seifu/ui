@@ -1,6 +1,7 @@
 // Supabase初期化
 const SUPABASE_URL = 'https://vguesgqyjpohphmeyiaf.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZndWVzZ3F5anBvaHBobWV5aWFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzOTc2ODAsImV4cCI6MjA2Mzk3MzY4MH0.JZes7O8Q3naGO7RAHzCpIJ4NMRvHkmgw1fCfGLN4MUM';
+
 const { createClient } = supabase;
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -32,25 +33,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadItemsFromSupabase(key);
     }
 
-    if (sections.gratitude.inputEl) {
-        sections.gratitude.inputEl.addEventListener('keypress', function(event) {
-            if (event.key === 'Enter' && !event.shiftKey) {
+    for (const key in sections) {
+        const input = sections[key].inputEl;
+        if (!input) continue;
+        input.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter' && (key !== 'task' ? !event.shiftKey : true)) {
                 event.preventDefault();
-                addItem(key);
-            }
-        });
-    }
-    if (sections.discussion.inputEl) {
-        sections.discussion.inputEl.addEventListener('keypress', function(event) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                addItem(key);
-            }
-        });
-    }
-    if (sections.task.inputEl) {
-        sections.task.inputEl.addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
                 addItem(key);
             }
         });
@@ -90,7 +78,7 @@ function deleteItem(sectionKey, index) {
         section.items.splice(index, 1);
         saveItems(sectionKey);
         renderList(sectionKey);
-        // Supabase側の削除も必要なら追加可能
+        // Supabase側の削除も必要ならここで追加可能
     }
 }
 
@@ -163,7 +151,7 @@ async function saveItemToSupabase(sectionKey, item) {
     else if (sectionKey === 'task') tableName = 'task_items';
     else return;
 
-    const { error } = await supabase.from(tableName).insert([item]);
+    const { error } = await supabaseClient.from(tableName).insert([item]);
     if (error) {
         console.error('Supabaseへの保存中にエラー:', error.message);
     }
@@ -176,7 +164,7 @@ async function loadItemsFromSupabase(sectionKey) {
     else if (sectionKey === 'task') tableName = 'task_items';
     else return;
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from(tableName)
         .select('*')
         .order('created_at', { ascending: true });
@@ -197,7 +185,7 @@ function clearAllData() {
                 sections[key].items = [];
                 localStorage.removeItem(sections[key].storageKey);
                 renderList(key);
-                // Supabaseからの削除も必要なら追加
+                // Supabaseからの削除も必要ならここで追加
             }
         }
         alert('全てのデータがリセットされました。');
