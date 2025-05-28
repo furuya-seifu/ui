@@ -3,10 +3,8 @@ const SUPABASE_URL = 'https://sdbkvffthxyxwecldhis.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkYmt2ZmZ0aHh5eHdlY2xkaGlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzOTk4NDcsImV4cCI6MjA2Mzk3NTg0N30.uVVoVXdaDmUHfBzK_QQ-o0lutuzbDeZIIGgFTc-fkZU';
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-
 const APP_PREFIX = 'coupleApp_';
 
-// 各セクションのデータを管理するオブジェクト
 const sections = {
     gratitude: {
         inputEl: document.getElementById('gratitude-input'),
@@ -24,23 +22,20 @@ const sections = {
         inputEl: document.getElementById('task-input'),
         listEl: document.getElementById('task-list'),
         storageKey: APP_PREFIX + 'taskItems',
-        items: [] // task items will be objects: { text: '...', completed: false }
+        items: []
     }
 };
 
-// ページの読み込み時にローカルストレージからデータを読み込む
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     for (const key in sections) {
-        loadItems(key);
+        await loadItemsFromSupabase(key);
     }
 
-    // Enterキーでアイテムを追加できるようにする (タスクと感謝/話し合いで挙動を分ける)
-    // DOMContentLoaded内でイベントリスナーを登録
     if (sections.gratitude.inputEl) {
         sections.gratitude.inputEl.addEventListener('keypress', function(event) {
-            if (event.key === 'Enter' && !event.shiftKey) { // Shift+Enterで改行できるように
-                event.preventDefault(); 
-                addItem('gratitude');
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                addItem(key);
             }
         });
     }
@@ -48,58 +43,42 @@ document.addEventListener('DOMContentLoaded', () => {
         sections.discussion.inputEl.addEventListener('keypress', function(event) {
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
-                addItem('discussion');
+                addItem(key);
             }
         });
     }
     if (sections.task.inputEl) {
         sections.task.inputEl.addEventListener('keypress', function(event) {
             if (event.key === 'Enter') {
-                addItem('task');
+                addItem(key);
             }
         });
     }
 });
 
-function loadItems(sectionKey) {
+async function addItem(sectionKey) {
     const section = sections[sectionKey];
-    if (!section) return; // sectionが存在しない場合は何もしない
-    const storedItems = localStorage.getItem(section.storageKey);
-    if (storedItems) {
-        section.items = JSON.parse(storedItems);
-    }
-    renderList(sectionKey);
-}
+    if (!section || !section.inputEl) return;
 
-function saveItems(sectionKey) {
-    const section = sections[sectionKey];
-    if (!section) return;
-    localStorage.setItem(section.storageKey, JSON.stringify(section.items));
-}
-
-function addItem(sectionKey) {
-    const section = sections[sectionKey];
-    if (!section || !section.inputEl) {
-        console.error("Section or input element not found for:", sectionKey);
-        return;
-    }
-    
     const text = section.inputEl.value.trim();
-
     if (text === '') {
         alert('内容を入力してください。');
         return;
     }
 
+    let newItem;
     if (sectionKey === 'task') {
-        section.items.push({ text: text, completed: false });
+        newItem = { text, completed: false };
     } else {
-        section.items.push(text);
+        newItem = { text };
     }
-    
-    section.inputEl.value = ''; // 入力欄をクリア
+
+    section.items.push(newItem);
+    section.inputEl.value = '';
     saveItems(sectionKey);
     renderList(sectionKey);
+
+    await saveItemToSupabase(sectionKey, newItem);
 }
 
 function deleteItem(sectionKey, index) {
@@ -110,6 +89,7 @@ function deleteItem(sectionKey, index) {
         section.items.splice(index, 1);
         saveItems(sectionKey);
         renderList(sectionKey);
+        // Supabase側の削除も必要なら追加可能
     }
 }
 
@@ -119,19 +99,16 @@ function toggleTaskStatus(index) {
     task.completed = !task.completed;
     saveItems('task');
     renderList('task');
+    // Supabaseに更新を送信してもよい
 }
 
 function renderList(sectionKey) {
     const section = sections[sectionKey];
-    if (!section || !section.listEl) {
-        console.error("Section or list element not found for:", sectionKey);
-        return;
-    }
-    section.listEl.innerHTML = ''; // リストをクリア
+    if (!section || !section.listEl) return;
+    section.listEl.innerHTML = '';
 
     section.items.forEach((item, index) => {
         const li = document.createElement('li');
-        
         const itemTextSpan = document.createElement('span');
         itemTextSpan.classList.add('item-text');
 
@@ -145,46 +122,89 @@ function renderList(sectionKey) {
             toggleBtn.classList.add('toggle-btn');
             toggleBtn.textContent = item.completed ? '未完了に戻す' : '完了';
             toggleBtn.onclick = () => toggleTaskStatus(index);
-            
+
             const deleteBtn = document.createElement('button');
             deleteBtn.classList.add('delete-btn');
             deleteBtn.textContent = '削除';
             deleteBtn.onclick = () => deleteItem(sectionKey, index);
-            
+
             const buttonsDiv = document.createElement('div');
             buttonsDiv.appendChild(toggleBtn);
             buttonsDiv.appendChild(deleteBtn);
 
             li.appendChild(itemTextSpan);
             li.appendChild(buttonsDiv);
-
         } else {
-            itemTextSpan.textContent = item;
+            itemTextSpan.textContent = item.text;
             const deleteBtn = document.createElement('button');
             deleteBtn.classList.add('delete-btn');
             deleteBtn.textContent = '削除';
             deleteBtn.onclick = () => deleteItem(sectionKey, index);
-            
+
             li.appendChild(itemTextSpan);
             li.appendChild(deleteBtn);
         }
+
         section.listEl.appendChild(li);
     });
+}
+
+function saveItems(sectionKey) {
+    const section = sections[sectionKey];
+    if (!section) return;
+    localStorage.setItem(section.storageKey, JSON.stringify(section.items));
+}
+
+async function saveItemToSupabase(sectionKey, item) {
+    let tableName = '';
+    if (sectionKey === 'gratitude') tableName = 'gratitude_items';
+    else if (sectionKey === 'discussion') tableName = 'discussion_items';
+    else if (sectionKey === 'task') tableName = 'task_items';
+    else return;
+
+    const { error } = await supabase.from(tableName).insert([item]);
+    if (error) {
+        console.error('Supabaseへの保存中にエラー:', error.message);
+    }
+}
+
+async function loadItemsFromSupabase(sectionKey) {
+    let tableName = '';
+    if (sectionKey === 'gratitude') tableName = 'gratitude_items';
+    else if (sectionKey === 'discussion') tableName = 'discussion_items';
+    else if (sectionKey === 'task') tableName = 'task_items';
+    else return;
+
+    const { data, error } = await supabase
+        .from(tableName)
+        .select('*')
+        .order('created_at', { ascending: true });
+
+    if (error) {
+        console.error('Supabaseからの読み込みエラー:', error.message);
+        return;
+    }
+
+    sections[sectionKey].items = data || [];
+    renderList(sectionKey);
 }
 
 function clearAllData() {
     if (confirm('本当に全てのデータをリセットしますか？この操作は元に戻せません。')) {
         for (const key in sections) {
             if (sections[key]) {
-                sections[key].items = []; // メモリ上のデータをクリア
-                localStorage.removeItem(sections[key].storageKey); // ローカルストレージから削除
-                renderList(key); // 表示を更新
+                sections[key].items = [];
+                localStorage.removeItem(sections[key].storageKey);
+                renderList(key);
+                // Supabaseからの削除も必要なら追加
             }
         }
         alert('全てのデータがリセットされました。');
     }
 }
 
-// HTMLのonclick属性から呼び出される関数はグローバルスコープにある必要があるため、
-// script.jsのトップレベルに関数を配置したままでOKです。
-// addItem, deleteItem, toggleTaskStatus, clearAllData はHTMLから直接呼び出されます。
+// HTMLから呼び出される関数（グローバルスコープ）
+window.addItem = addItem;
+window.deleteItem = deleteItem;
+window.toggleTaskStatus = toggleTaskStatus;
+window.clearAllData = clearAllData;
