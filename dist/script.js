@@ -1,8 +1,8 @@
 const SUPABASE_URL = 'https://vguesgqyjpohphmeyiaf.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZndWVzZ3F5anBvaHBobWV5aWFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzOTc2ODAsImV4cCI6MjA2Mzk3MzY4MH0.JZes7O8Q3naGO7RAHzCpIJ4NMRvHkmgw1fCfGLN4MUM';
 
-const { createClient } = supabase;
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = window.supabase; // supabase-js を CDN で読み込んでいることを前提
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 document.addEventListener('DOMContentLoaded', () => {
     const messageList = document.getElementById('message-list');
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (error) {
             console.error('送信エラー:', error.message);
-            alert('メッセージの送信に失敗しました。');
+            alert('メッセージの送信に失敗しました。\n' + error.message);
             return;
         }
 
