@@ -1,11 +1,10 @@
-// ここがデータベース関係
+// SupabaseのURLとキー
 const SUPABASE_URL = 'https://vguesgqyjpohphmeyiaf.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZndWVzZ3F5anBvaHBobWV5aWFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzOTc2ODAsImV4cCI6MjA2Mzk3MzY4MH0.JZes7O8Q3naGO7RAHzCpIJ4NMRvHkmgw1fCfGLN4MUM';
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-// ここまで
-
 // Supabaseクライアント初期化
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 const container = document.getElementById('sweets-container');
 const modalBg = document.getElementById('modal-bg');
 const modalImg = document.getElementById('modal-img');
@@ -15,7 +14,7 @@ const modalClose = document.getElementById('modal-close');
 
 let sweetsData = [];
 
-// Supabaseからお菓子データを取得して表示
+// データ取得
 async function loadSweets() {
   const { data, error } = await supabase
     .from('sweets')
@@ -27,7 +26,7 @@ async function loadSweets() {
     return;
   }
 
-  sweetsData = data; // グローバルに保持
+  sweetsData = data;
 
   data.forEach((sweet, index) => {
     const card = createCard(sweet, index);
@@ -35,7 +34,7 @@ async function loadSweets() {
   });
 }
 
-// カード作成関数
+// カード作成
 function createCard(sweet, index) {
   const card = document.createElement('div');
   card.className = 'card';
@@ -44,7 +43,7 @@ function createCard(sweet, index) {
     <img src="${sweet.img}" alt="${sweet.title}" />
     <div class="card-body">
       <h3>${sweet.title}</h3>
-      <p>${sweet.desc}</p>
+      <p>${sweet.description}</p>
       <button class="btn-detail" data-index="${index}">詳細を見る</button>
     </div>
   `;
@@ -60,7 +59,7 @@ container.addEventListener('click', (e) => {
 
     modalImg.src = sweet.img;
     modalTitle.textContent = sweet.title;
-    modalDesc.textContent = sweet.desc;
+    modalDesc.textContent = sweet.description;
     modalBg.style.display = 'flex';
   }
 });
@@ -78,4 +77,4 @@ modalBg.addEventListener('click', (e) => {
 });
 
 // ページロード時にデータ取得
-loadSweets();
+window.addEventListener('DOMContentLoaded', loadSweets);
