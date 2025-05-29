@@ -1,199 +1,118 @@
-// Supabase初期化
-const SUPABASE_URL = 'https://vguesgqyjpohphmeyiaf.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZndWVzZ3F5anBvaHBobWV5aWFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzOTc2ODAsImV4cCI6MjA2Mzk3MzY4MH0.JZes7O8Q3naGO7RAHzCpIJ4NMRvHkmgw1fCfGLN4MUM';
+document.addEventListener('DOMContentLoaded', () => {
+    const messageList = document.getElementById('message-list');
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
+    const usernameInput = document.getElementById('username-input');
+    const clearButton = document.getElementById('clear-button');
+    const chatWindow = document.getElementById('chat-window');
 
-const { createClient } = supabase;
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+    const STORAGE_KEY_MESSAGES = 'chatAppMessages';
+    const STORAGE_KEY_USERNAME = 'chatAppUsername';
 
-const APP_PREFIX = 'coupleApp_';
-
-const sections = {
-    gratitude: {
-        inputEl: document.getElementById('gratitude-input'),
-        listEl: document.getElementById('gratitude-list'),
-        storageKey: APP_PREFIX + 'gratitudeItems',
-        items: []
-    },
-    discussion: {
-        inputEl: document.getElementById('discussion-input'),
-        listEl: document.getElementById('discussion-list'),
-        storageKey: APP_PREFIX + 'discussionItems',
-        items: []
-    },
-    task: {
-        inputEl: document.getElementById('task-input'),
-        listEl: document.getElementById('task-list'),
-        storageKey: APP_PREFIX + 'taskItems',
-        items: []
-    }
-};
-
-document.addEventListener('DOMContentLoaded', async () => {
-    for (const key in sections) {
-        await loadItemsFromSupabase(key);
+    // 以前のユーザー名を読み込む
+    const savedUsername = localStorage.getItem(STORAGE_KEY_USERNAME);
+    if (savedUsername) {
+        usernameInput.value = savedUsername;
     }
 
-    for (const key in sections) {
-        const input = sections[key].inputEl;
-        if (!input) continue;
-        input.addEventListener('keypress', function(event) {
-            if (event.key === 'Enter' && (key !== 'task' ? !event.shiftKey : true)) {
-                event.preventDefault();
-                addItem(key);
-            }
-        });
-    }
-});
-
-async function addItem(sectionKey) {
-    const section = sections[sectionKey];
-    if (!section || !section.inputEl) return;
-
-    const text = section.inputEl.value.trim();
-    if (text === '') {
-        alert('内容を入力してください。');
-        return;
+    // ローカルストレージからメッセージを読み込む関数
+    function loadMessages() {
+        const storedMessages = localStorage.getItem(STORAGE_KEY_MESSAGES);
+        return storedMessages ? JSON.parse(storedMessages) : [];
     }
 
-    let newItem;
-    if (sectionKey === 'task') {
-        newItem = { text, completed: false };
-    } else {
-        newItem = { text };
+    // メッセージをローカルストレージに保存する関数
+    function saveMessages(messages) {
+        localStorage.setItem(STORAGE_KEY_MESSAGES, JSON.stringify(messages));
     }
 
-    section.items.push(newItem);
-    section.inputEl.value = '';
-    saveItems(sectionKey);
-    renderList(sectionKey);
-
-    await saveItemToSupabase(sectionKey, newItem);
-}
-
-function deleteItem(sectionKey, index) {
-    const section = sections[sectionKey];
-    if (!section) return;
-
-    if (confirm('この項目を削除しますか？')) {
-        section.items.splice(index, 1);
-        saveItems(sectionKey);
-        renderList(sectionKey);
-        // Supabase側の削除も必要ならここで追加可能
-    }
-}
-
-function toggleTaskStatus(index) {
-    const task = sections.task.items[index];
-    if (!task) return;
-    task.completed = !task.completed;
-    saveItems('task');
-    renderList('task');
-    // Supabaseに更新を送信してもよい
-}
-
-function renderList(sectionKey) {
-    const section = sections[sectionKey];
-    if (!section || !section.listEl) return;
-    section.listEl.innerHTML = '';
-
-    section.items.forEach((item, index) => {
+    // メッセージを画面に表示する関数
+    function displayMessage(messageObj) {
         const li = document.createElement('li');
-        const itemTextSpan = document.createElement('span');
-        itemTextSpan.classList.add('item-text');
 
-        if (sectionKey === 'task') {
-            itemTextSpan.textContent = item.text;
-            if (item.completed) {
-                li.classList.add('completed');
-            }
+        const usernameSpan = document.createElement('span');
+        usernameSpan.className = 'username';
+        usernameSpan.textContent = escapeHTML(messageObj.username); // XSS対策
 
-            const toggleBtn = document.createElement('button');
-            toggleBtn.classList.add('toggle-btn');
-            toggleBtn.textContent = item.completed ? '未完了に戻す' : '完了';
-            toggleBtn.onclick = () => toggleTaskStatus(index);
+        const messageTextSpan = document.createElement('span');
+        messageTextSpan.className = 'message-text';
+        messageTextSpan.textContent = escapeHTML(messageObj.text); // XSS対策
 
-            const deleteBtn = document.createElement('button');
-            deleteBtn.classList.add('delete-btn');
-            deleteBtn.textContent = '削除';
-            deleteBtn.onclick = () => deleteItem(sectionKey, index);
+        const timestampSpan = document.createElement('span');
+        timestampSpan.className = 'timestamp';
+        timestampSpan.textContent = new Date(messageObj.timestamp).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
 
-            const buttonsDiv = document.createElement('div');
-            buttonsDiv.appendChild(toggleBtn);
-            buttonsDiv.appendChild(deleteBtn);
+        li.appendChild(usernameSpan);
+        li.appendChild(messageTextSpan);
+        li.appendChild(timestampSpan);
 
-            li.appendChild(itemTextSpan);
-            li.appendChild(buttonsDiv);
+        // 自分のメッセージかどうかの判定（例：現在の入力名と一致するか）
+        if (messageObj.username === (usernameInput.value.trim() || '匿名')) {
+            li.classList.add('my-message');
         } else {
-            itemTextSpan.textContent = item.text;
-            const deleteBtn = document.createElement('button');
-            deleteBtn.classList.add('delete-btn');
-            deleteBtn.textContent = '削除';
-            deleteBtn.onclick = () => deleteItem(sectionKey, index);
-
-            li.appendChild(itemTextSpan);
-            li.appendChild(deleteBtn);
+            li.classList.add('other-message');
         }
 
-        section.listEl.appendChild(li);
+        messageList.appendChild(li);
+        chatWindow.scrollTop = chatWindow.scrollHeight; // 自動スクロール
+    }
+
+    // HTMLエスケープ関数 (簡易的なXSS対策)
+    function escapeHTML(str) {
+        const div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    }
+
+    // 送信処理
+    function sendMessage() {
+        const messageText = messageInput.value.trim();
+        const username = usernameInput.value.trim() || '匿名'; // 名前が空なら匿名
+
+        if (messageText === '') {
+            return; // 空のメッセージは送信しない
+        }
+
+        const messageObj = {
+            username: username,
+            text: messageText,
+            timestamp: new Date().toISOString()
+        };
+
+        // 現在のメッセージリストを取得し、新しいメッセージを追加
+        const messages = loadMessages();
+        messages.push(messageObj);
+        saveMessages(messages); // 保存
+
+        displayMessage(messageObj); // 画面に表示
+
+        messageInput.value = ''; // 入力欄をクリア
+        messageInput.focus(); // 入力欄にフォーカスを戻す
+
+        // ユーザー名を保存
+        localStorage.setItem(STORAGE_KEY_USERNAME, username);
+    }
+
+    // イベントリスナー
+    sendButton.addEventListener('click', sendMessage);
+
+    messageInput.addEventListener('keypress', (event) => {
+        // Enterキーで送信 (Shift+Enterで改行)
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault(); // デフォルトの改行動作をキャンセル
+            sendMessage();
+        }
     });
-}
 
-function saveItems(sectionKey) {
-    const section = sections[sectionKey];
-    if (!section) return;
-    localStorage.setItem(section.storageKey, JSON.stringify(section.items));
-}
-
-async function saveItemToSupabase(sectionKey, item) {
-    let tableName = '';
-    if (sectionKey === 'gratitude') tableName = 'gratitude_items';
-    else if (sectionKey === 'discussion') tableName = 'discussion_items';
-    else if (sectionKey === 'task') tableName = 'task_items';
-    else return;
-
-    const { error } = await supabaseClient.from(tableName).insert([item]);
-    if (error) {
-        console.error('Supabaseへの保存中にエラー:', error.message);
-    }
-}
-
-async function loadItemsFromSupabase(sectionKey) {
-    let tableName = '';
-    if (sectionKey === 'gratitude') tableName = 'gratitude_items';
-    else if (sectionKey === 'discussion') tableName = 'discussion_items';
-    else if (sectionKey === 'task') tableName = 'task_items';
-    else return;
-
-    const { data, error } = await supabaseClient
-        .from(tableName)
-        .select('*')
-        .order('created_at', { ascending: true });
-
-    if (error) {
-        console.error('Supabaseからの読み込みエラー:', error.message);
-        return;
-    }
-
-    sections[sectionKey].items = data || [];
-    renderList(sectionKey);
-}
-
-function clearAllData() {
-    if (confirm('本当に全てのデータをリセットしますか？この操作は元に戻せません。')) {
-        for (const key in sections) {
-            if (sections[key]) {
-                sections[key].items = [];
-                localStorage.removeItem(sections[key].storageKey);
-                renderList(key);
-                // Supabaseからの削除も必要ならここで追加
-            }
+    clearButton.addEventListener('click', () => {
+        if (confirm('チャット履歴をすべて削除しますか？')) {
+            localStorage.removeItem(STORAGE_KEY_MESSAGES);
+            messageList.innerHTML = ''; // 表示されているメッセージもクリア
+            alert('チャット履歴がクリアされました。');
         }
-        alert('全てのデータがリセットされました。');
-    }
-}
+    });
 
-// HTMLから呼び出される関数（グローバルスコープ）
-window.addItem = addItem;
-window.deleteItem = deleteItem;
-window.toggleTaskStatus = toggleTaskStatus;
-window.clearAllData = clearAllData;
+    // 初期表示時に保存されているメッセージを読み込んで表示
+    const initialMessages = loadMessages();
+    initialMessages.forEach(displayMessage);
+});

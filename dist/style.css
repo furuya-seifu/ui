@@ -2,159 +2,166 @@ body {
     font-family: 'Arial', sans-serif;
     margin: 0;
     padding: 20px;
-    background-color: #f4f7f6;
-    color: #333;
+    background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+#chat-container {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    align-items: center;
 }
 
-.container {
-    width: 100%;
-    max-width: 800px;
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-header {
+#chat-container h1 {
+    background-color: #007bff;
+    color: white;
+    padding: 15px;
+    margin: 0;
+    font-size: 1.5em;
     text-align: center;
-    margin-bottom: 30px;
-    border-bottom: 2px solid #e0e0e0;
-    padding-bottom: 20px;
 }
 
-header h1 {
-    color: #2c3e50;
+#chat-window {
+    height: 400px;
+    overflow-y: auto;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    background-color: #e9ecef;
+}
+
+#message-list {
+    list-style-type: none;
+    padding: 0;
     margin: 0;
 }
-header p {
-    color: #7f8c8d;
+
+#message-list li {
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    word-wrap: break-word; /* 長い単語も折り返す */
+}
+
+#message-list li .username {
+    font-weight: bold;
+    color: #333;
+    margin-right: 5px;
+}
+
+#message-list li .timestamp {
+    font-size: 0.8em;
+    color: #777;
+    margin-left: 10px;
+}
+
+#message-list li.my-message {
+    background-color: #dcf8c6;
+    text-align: right; /* 自分のメッセージを右寄せにする場合 */
+    margin-left: auto; /* 右寄せにするためのトリック */
+    max-width: 80%;
+}
+
+#message-list li.other-message {
+    background-color: #f1f0f0;
+    text-align: left; /* 他のメッセージを左寄せにする場合 */
+    max-width: 80%;
+}
+
+
+#input-area {
+    display: flex;
+    padding: 15px;
+    border-top: 1px solid #eee;
+    align-items: stretch; /* 高さを揃える */
+}
+
+#username-input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-right: 10px;
+    width: 120px; /* 名前の入力欄の幅を固定 */
     font-size: 0.9em;
 }
 
-.section {
-    margin-bottom: 30px;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-}
-
-.section h2 {
-    color: #3498db;
-    margin-top: 0;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-}
-
-input[type="text"], textarea {
-    width: calc(100% - 22px); /* padding + border */
+#message-input {
+    flex-grow: 1;
     padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid #ddd;
     border-radius: 4px;
-    box-sizing: border-box;
-}
-textarea {
-    min-height: 80px;
-    resize: vertical;
+    resize: none; /* リサイズ不可 */
+    font-size: 1em;
+    min-height: 40px; /* 最小の高さを設定 */
+    line-height: 1.4;
 }
 
-button {
-    background-color: #3498db;
+#send-button {
+    background-color: #007bff;
     color: white;
-    padding: 10px 15px;
     border: none;
+    padding: 0 20px; /* 上下はtextareaに合わせ、左右にパディング */
+    margin-left: 10px;
     border-radius: 4px;
     cursor: pointer;
     font-size: 1em;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s ease;
 }
 
-button:hover {
-    background-color: #2980b9;
+#send-button:hover {
+    background-color: #0056b3;
 }
 
-ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-li {
-    background-color: #fff;
+#clear-button {
+    background-color: #dc3545;
+    color: white;
+    border: none;
     padding: 10px;
-    margin-bottom: 8px;
+    margin: 15px;
     border-radius: 4px;
-    border: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    word-break: break-word;
-}
-
-li .item-text {
-    flex-grow: 1;
-    margin-right: 10px;
-}
-li.completed .item-text {
-    text-decoration: line-through;
-    color: #aaa;
-}
-
-.delete-btn {
-    background-color: #e74c3c;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 3px;
     cursor: pointer;
-    font-size: 0.8em;
-}
-.delete-btn:hover {
-    background-color: #c0392b;
+    font-size: 0.9em;
+    transition: background-color 0.3s ease;
 }
 
-.toggle-btn {
-    background-color: #2ecc71;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 0.8em;
-    margin-right: 5px;
-}
-.toggle-btn:hover {
-    background-color: #27ae60;
+#clear-button:hover {
+    background-color: #c82333;
 }
 
-.clear-all-btn {
-    display: block;
-    margin: 30px auto 10px auto;
-    background-color: #95a5a6;
-}
-.clear-all-btn:hover {
-    background-color: #7f8c8d;
-}
-
-/* Responsive adjustments */
-@media (max-width: 600px) {
+/* スマートフォン向けの調整 */
+@media (max-width: 480px) {
     body {
-        padding: 10px;
+        padding: 5px;
     }
-    .container {
-        padding: 15px;
+    #chat-container {
+        height: 95vh; /* ビューポートの高さいっぱい */
     }
-    .section {
-        padding: 15px;
+    #chat-window {
+        flex-grow: 1; /* 入力欄以外の残りの高さを取る */
     }
-    li {
-        flex-direction: column;
-        align-items: flex-start;
+    #input-area {
+        flex-direction: column; /* 入力欄を縦並びにする */
     }
-    li div:not(.item-text) { /* Buttons container */
-        margin-top: 8px;
+    #username-input {
+        width: auto; /* 幅を自動調整 */
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+    #message-input {
+        margin-bottom: 10px;
+        height: 60px; /* 高さを少し増やす */
+    }
+    #send-button {
+        margin-left: 0;
+        width: 100%;
+        padding: 12px; /* ボタンを大きく */
     }
 }
