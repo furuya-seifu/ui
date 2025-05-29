@@ -3,86 +3,82 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const form = document.getElementById('recipe-form');
-const recipesList = document.getElementById('recipes-list');
-const searchBar = document.getElementById('search-bar');
+// Supabaseクライアント初期化
+const SUPABASE_URL = 'https://your-project.supabase.co'; // あなたのSupabase URL
+const SUPABASE_ANON_KEY = 'your-anon-key';              // あなたのanon公開鍵
 
-function escapeHTML(str) {
-  const div = document.createElement('div');
-  div.appendChild(document.createTextNode(str));
-  return div.innerHTML;
-}
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-function renderRecipe(recipe) {
-  const div = document.createElement('div');
-  div.className = 'recipe';
+const container = document.getElementById('sweets-container');
+const modalBg = document.getElementById('modal-bg');
+const modalImg = document.getElementById('modal-img');
+const modalTitle = document.getElementById('modal-title');
+const modalDesc = document.getElementById('modal-desc');
+const modalClose = document.getElementById('modal-close');
 
-  div.innerHTML = `
-    <h3>${escapeHTML(recipe.title)}</h3>
-    <p><strong>カテゴリー:</strong> ${escapeHTML(recipe.category)}</p>
-    <p><strong>材料:</strong><br>${escapeHTML(recipe.ingredients).replace(/\n/g, '<br>')}</p>
-    <p><strong>調理手順:</strong><br>${escapeHTML(recipe.instructions).replace(/\n/g, '<br>')}</p>
-  `;
+let sweetsData = [];
 
-  return div;
-}
+// Supabaseからお菓子データを取得して表示
+async function loadSweets() {
+  const { data, error } = await supabase
+    .from('sweets')
+    .select('*');
 
-async function fetchRecipes(filter = '') {
-  let query = supabase
-    .from('recipes')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (filter) {
-    query = query.or(`title.ilike.%${filter}%,category.ilike.%${filter}%`);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
+  if(error) {
     console.error('データ取得エラー:', error);
+    container.textContent = 'お菓子のデータを読み込めませんでした。';
     return;
   }
 
-  recipesList.innerHTML = '';
-  data.forEach(recipe => {
-    const recipeDiv = renderRecipe(recipe);
-    recipesList.appendChild(recipeDiv);
+  sweetsData = data; // グローバルに保持
+
+  data.forEach((sweet, index) => {
+    const card = createCard(sweet, index);
+    container.appendChild(card);
   });
 }
 
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
+// カード作成関数
+function createCard(sweet, index) {
+  const card = document.createElement('div');
+  card.className = 'card';
 
-  const title = form.title.value.trim();
-  const ingredients = form.ingredients.value.trim();
-  const instructions = form.instructions.value.trim();
-  const category = form.category.value;
+  card.innerHTML = `
+    <img src="${sweet.img}" alt="${sweet.title}" />
+    <div class="card-body">
+      <h3>${sweet.title}</h3>
+      <p>${sweet.desc}</p>
+      <button class="btn-detail" data-index="${index}">詳細を見る</button>
+    </div>
+  `;
 
-  if (!title || !ingredients || !instructions || !category) {
-    alert('すべての項目を入力してください。');
-    return;
+  return card;
+}
+
+// 詳細ボタンイベント
+container.addEventListener('click', (e) => {
+  if(e.target.classList.contains('btn-detail')) {
+    const idx = e.target.getAttribute('data-index');
+    const sweet = sweetsData[idx];
+
+    modalImg.src = sweet.img;
+    modalTitle.textContent = sweet.title;
+    modalDesc.textContent = sweet.desc;
+    modalBg.style.display = 'flex';
   }
-
-  const { error } = await supabase
-    .from('recipes')
-    .insert([{ title, ingredients, instructions, category }]);
-
-  if (error) {
-    console.error('投稿エラー:', error);
-    alert('投稿に失敗しました。');
-    return;
-  }
-
-  alert('レシピが投稿されました！');
-  form.reset();
-  fetchRecipes();
 });
 
-searchBar.addEventListener('input', () => {
-  const val = searchBar.value.trim();
-  fetchRecipes(val);
+// モーダル閉じる
+modalClose.addEventListener('click', () => {
+  modalBg.style.display = 'none';
 });
 
-// ページロード時に全レシピを取得
-fetchRecipes();
+// 背景クリックで閉じる
+modalBg.addEventListener('click', (e) => {
+  if(e.target === modalBg) {
+    modalBg.style.display = 'none';
+  }
+});
+
+// ページロード時にデータ取得
+loadSweets();
