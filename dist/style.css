@@ -1,167 +1,64 @@
 body {
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 20px;
-    background-color: #f4f4f4;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    box-sizing: border-box;
+  font-family: Arial, sans-serif;
+  max-width: 800px;
+  margin: 1rem auto;
+  padding: 0 1rem;
+  background: #fff8f0;
+  color: #333;
 }
-
-#chat-container {
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 600px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
+h1 {
+  text-align: center;
+  color: #d35400;
 }
-
-#chat-container h1 {
-    background-color: #007bff;
-    color: white;
-    padding: 15px;
-    margin: 0;
-    font-size: 1.5em;
-    text-align: center;
+form {
+  background: #fff3e0;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
 }
-
-#chat-window {
-    height: 400px;
-    overflow-y: auto;
-    padding: 15px;
-    border-bottom: 1px solid #eee;
-    background-color: #e9ecef;
+label {
+  display: block;
+  margin-top: 1rem;
 }
-
-#message-list {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
+input[type="text"], textarea, select {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.3rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  box-sizing: border-box;
 }
-
-#message-list li {
-    margin-bottom: 10px;
-    padding: 10px;
-    border-radius: 5px;
-    word-wrap: break-word; /* 長い単語も折り返す */
+button {
+  margin-top: 1rem;
+  background-color: #e67e22;
+  color: white;
+  border: none;
+  padding: 0.7rem 1.2rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
 }
-
-#message-list li .username {
-    font-weight: bold;
-    color: #333;
-    margin-right: 5px;
+button:hover {
+  background-color: #d35400;
 }
-
-#message-list li .timestamp {
-    font-size: 0.8em;
-    color: #777;
-    margin-left: 10px;
+.recipe {
+  background: #fff3e0;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
 }
-
-#message-list li.my-message {
-    background-color: #dcf8c6;
-    text-align: right; /* 自分のメッセージを右寄せにする場合 */
-    margin-left: auto; /* 右寄せにするためのトリック */
-    max-width: 80%;
+.recipe h3 {
+  margin: 0 0 0.5rem 0;
+  color: #d35400;
 }
-
-#message-list li.other-message {
-    background-color: #f1f0f0;
-    text-align: left; /* 他のメッセージを左寄せにする場合 */
-    max-width: 80%;
+.recipe p {
+  margin: 0.2rem 0;
 }
-
-
-#input-area {
-    display: flex;
-    padding: 15px;
-    border-top: 1px solid #eee;
-    align-items: stretch; /* 高さを揃える */
-}
-
-#username-input {
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-right: 10px;
-    width: 120px; /* 名前の入力欄の幅を固定 */
-    font-size: 0.9em;
-}
-
-#message-input {
-    flex-grow: 1;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    resize: none; /* リサイズ不可 */
-    font-size: 1em;
-    min-height: 40px; /* 最小の高さを設定 */
-    line-height: 1.4;
-}
-
-#send-button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 0 20px; /* 上下はtextareaに合わせ、左右にパディング */
-    margin-left: 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1em;
-    transition: background-color 0.3s ease;
-}
-
-#send-button:hover {
-    background-color: #0056b3;
-}
-
-#clear-button {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    padding: 10px;
-    margin: 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9em;
-    transition: background-color 0.3s ease;
-}
-
-#clear-button:hover {
-    background-color: #c82333;
-}
-
-/* スマートフォン向けの調整 */
-@media (max-width: 480px) {
-    body {
-        padding: 5px;
-    }
-    #chat-container {
-        height: 95vh; /* ビューポートの高さいっぱい */
-    }
-    #chat-window {
-        flex-grow: 1; /* 入力欄以外の残りの高さを取る */
-    }
-    #input-area {
-        flex-direction: column; /* 入力欄を縦並びにする */
-    }
-    #username-input {
-        width: auto; /* 幅を自動調整 */
-        margin-right: 0;
-        margin-bottom: 10px;
-    }
-    #message-input {
-        margin-bottom: 10px;
-        height: 60px; /* 高さを少し増やす */
-    }
-    #send-button {
-        margin-left: 0;
-        width: 100%;
-        padding: 12px; /* ボタンを大きく */
-    }
+#search-bar {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 1rem;
 }

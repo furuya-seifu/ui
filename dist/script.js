@@ -1,125 +1,88 @@
 const SUPABASE_URL = 'https://vguesgqyjpohphmeyiaf.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZndWVzZ3F5anBvaHBobWV5aWFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzOTc2ODAsImV4cCI6MjA2Mzk3MzY4MH0.JZes7O8Q3naGO7RAHzCpIJ4NMRvHkmgw1fCfGLN4MUM';
 
-const supabase = window.supabase; // supabase-js を CDN で読み込んでいることを前提
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-document.addEventListener('DOMContentLoaded', () => {
-    const messageList = document.getElementById('message-list');
-    const messageInput = document.getElementById('message-input');
-    const sendButton = document.getElementById('send-button');
-    const usernameInput = document.getElementById('username-input');
-    const clearButton = document.getElementById('clear-button');
-    const chatWindow = document.getElementById('chat-window');
+const form = document.getElementById('recipe-form');
+const recipesList = document.getElementById('recipes-list');
+const searchBar = document.getElementById('search-bar');
 
-    function escapeHTML(str) {
-        const div = document.createElement('div');
-        div.appendChild(document.createTextNode(str));
-        return div.innerHTML;
-    }
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
 
-    function displayMessage(messageObj) {
-        const li = document.createElement('li');
+function renderRecipe(recipe) {
+  const div = document.createElement('div');
+  div.className = 'recipe';
 
-        const usernameSpan = document.createElement('span');
-        usernameSpan.className = 'username';
-        usernameSpan.textContent = escapeHTML(messageObj.username);
+  div.innerHTML = `
+    <h3>${escapeHTML(recipe.title)}</h3>
+    <p><strong>カテゴリー:</strong> ${escapeHTML(recipe.category)}</p>
+    <p><strong>材料:</strong><br>${escapeHTML(recipe.ingredients).replace(/\n/g, '<br>')}</p>
+    <p><strong>調理手順:</strong><br>${escapeHTML(recipe.instructions).replace(/\n/g, '<br>')}</p>
+  `;
 
-        const messageTextSpan = document.createElement('span');
-        messageTextSpan.className = 'message-text';
-        messageTextSpan.textContent = escapeHTML(messageObj.text);
+  return div;
+}
 
-        const timestampSpan = document.createElement('span');
-        timestampSpan.className = 'timestamp';
-        timestampSpan.textContent = new Date(messageObj.timestamp).toLocaleTimeString('ja-JP', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+async function fetchRecipes(filter = '') {
+  let query = supabase
+    .from('recipes')
+    .select('*')
+    .order('created_at', { ascending: false });
 
-        li.appendChild(usernameSpan);
-        li.appendChild(messageTextSpan);
-        li.appendChild(timestampSpan);
+  if (filter) {
+    query = query.or(`title.ilike.%${filter}%,category.ilike.%${filter}%`);
+  }
 
-        if (messageObj.username === (usernameInput.value.trim() || '匿名')) {
-            li.classList.add('my-message');
-        } else {
-            li.classList.add('other-message');
-        }
+  const { data, error } = await query;
 
-        messageList.appendChild(li);
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
+  if (error) {
+    console.error('データ取得エラー:', error);
+    return;
+  }
 
-    async function loadMessages() {
-        const { data, error } = await supabaseClient
-            .from('messages')
-            .select('*')
-            .order('timestamp', { ascending: true });
+  recipesList.innerHTML = '';
+  data.forEach(recipe => {
+    const recipeDiv = renderRecipe(recipe);
+    recipesList.appendChild(recipeDiv);
+  });
+}
 
-        if (error) {
-            console.error('読み込みエラー:', error.message);
-            return;
-        }
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
 
-        messageList.innerHTML = '';
-        data.forEach(displayMessage);
-    }
+  const title = form.title.value.trim();
+  const ingredients = form.ingredients.value.trim();
+  const instructions = form.instructions.value.trim();
+  const category = form.category.value;
 
-    async function sendMessage() {
-        const messageText = messageInput.value.trim();
-        const username = usernameInput.value.trim() || '匿名';
+  if (!title || !ingredients || !instructions || !category) {
+    alert('すべての項目を入力してください。');
+    return;
+  }
 
-        if (messageText === '') return;
+  const { error } = await supabase
+    .from('recipes')
+    .insert([{ title, ingredients, instructions, category }]);
 
-        const messageObj = {
-            username: username,
-            text: messageText,
-            timestamp: new Date().toISOString()
-        };
+  if (error) {
+    console.error('投稿エラー:', error);
+    alert('投稿に失敗しました。');
+    return;
+  }
 
-        const { error } = await supabaseClient
-            .from('messages')
-            .insert([messageObj]);
-
-        if (error) {
-            console.error('送信エラー:', error.message);
-            alert('メッセージの送信に失敗しました。\n' + error.message);
-            return;
-        }
-
-        displayMessage(messageObj);
-        messageInput.value = '';
-        messageInput.focus();
-    }
-
-    async function clearMessages() {
-        if (confirm('チャット履歴をすべて削除しますか？')) {
-            const { error } = await supabaseClient
-                .from('messages')
-                .delete()
-                .neq('id', 0);
-
-            if (error) {
-                console.error('削除エラー:', error.message);
-                alert('削除に失敗しました。');
-                return;
-            }
-
-            messageList.innerHTML = '';
-            alert('チャット履歴がクリアされました。');
-        }
-    }
-
-    sendButton.addEventListener('click', sendMessage);
-
-    messageInput.addEventListener('keypress', (event) => {
-        if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault();
-            sendMessage();
-        }
-    });
-
-    clearButton.addEventListener('click', clearMessages);
-
-    loadMessages();
+  alert('レシピが投稿されました！');
+  form.reset();
+  fetchRecipes();
 });
+
+searchBar.addEventListener('input', () => {
+  const val = searchBar.value.trim();
+  fetchRecipes(val);
+});
+
+// ページロード時に全レシピを取得
+fetchRecipes();
