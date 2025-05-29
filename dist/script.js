@@ -1,22 +1,38 @@
-const messages = [
-  "継続は力なり。今日の努力が未来を作る。",
-  "できるまでやる。やめたらそこで試合終了。",
-  "失敗は成功のもと。恐れず挑戦しよう。",
-  "一歩ずつでも前に進むことが大事。",
-  "勉強は自分への最高の投資。",
-  "努力は裏切らない。信じて続けよう。",
-  "小さな積み重ねが大きな成果を生む。",
-  "今の頑張りが明日の自信になる。",
-  "夢は見るものじゃない。叶えるものだ。",
-  "やればできる。あとはやるかやらないか。",
-  "諦めたらそこで試合終了。最後まで走り切ろう。",
-  "知識は力。今日もたくさん吸収しよう！"
-];
+// SupabaseのURLとキー
+const SUPABASE_URL = 'https://vguesgqyjpohphmeyiaf.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZndWVzZ3F5anBvaHBobWV5aWFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzOTc2ODAsImV4cCI6MjA2Mzk3MzY4MH0.JZes7O8Q3naGO7RAHzCpIJ4NMRvHkmgw1fCfGLN4MUM';
 
 const messageEl = document.getElementById('message');
 const btn = document.getElementById('generateBtn');
 
+let messages = [];
+
+// メッセージをAPIから取得
+async function fetchMessages() {
+  try {
+    const response = await fetch('/api/messages'); // ← 必要に応じてURL変更
+    if (!response.ok) throw new Error('メッセージ取得に失敗しました');
+    const data = await response.json();
+    messages = data.messages || []; // {"messages": ["...", "..."]} を想定
+
+    if (messages.length > 0) {
+      messageEl.textContent = "ボタンを押して、やる気アップ！";
+      btn.disabled = false;
+    } else {
+      messageEl.textContent = "メッセージが見つかりませんでした。";
+    }
+  } catch (err) {
+    console.error(err);
+    messageEl.textContent = "エラーが発生しました。後でもう一度お試しください。";
+  }
+}
+
+// ボタン押下でランダムメッセージ表示
 btn.addEventListener('click', () => {
+  if (messages.length === 0) return;
   const randomIndex = Math.floor(Math.random() * messages.length);
   messageEl.textContent = messages[randomIndex];
 });
+
+// 初期化
+fetchMessages();
