@@ -1,18 +1,28 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>勉強欲アップサイト</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Todo App</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="container">
+        <h1>Supabase Todo リスト</h1>
 
-<h1>今日の勉強欲アップメッセージ</h1>
-<div id="message"></div>
-<button id="generateBtn" disabled>やる気を出す！</button>
+        <div class="input-area">
+            <input type="text" id="task-input" placeholder="新しいタスクを入力...">
+            <button id="add-task-button">追加</button>
+        </div>
 
-<script src="script.js"></script>
+        <ul id="task-list">
+            <!-- タスクがここに表示されます -->
+        </ul>
+    </div>
+
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Your custom script -->
+    <script src="script.js"></script>
 </body>
 </html>
-
