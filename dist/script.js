@@ -4,11 +4,6 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Supabaseクライアント初期化
-const SUPABASE_URL = 'https://your-project.supabase.co'; // あなたのSupabase URL
-const SUPABASE_ANON_KEY = 'your-anon-key';              // あなたのanon公開鍵
-
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 const container = document.getElementById('sweets-container');
 const modalBg = document.getElementById('modal-bg');
 const modalImg = document.getElementById('modal-img');
