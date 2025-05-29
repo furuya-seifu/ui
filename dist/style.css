@@ -75,6 +75,7 @@ h1 {
 }
 
 /* (オプション) 削除ボタン用のスタイル */
+/*
 #task-list li .delete-button {
     background-color: #e74c3c;
     color: white;
@@ -88,3 +89,4 @@ h1 {
 #task-list li .delete-button:hover {
     background-color: #c0392b;
 }
+*/

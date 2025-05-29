@@ -1,178 +1,182 @@
-// 1. SupabaseプロジェクトのURLとanon keyを設定
-// 必ずご自身のプロジェクトの値に置き換えてください！
-const SUPABASE_URL = 'https://vguesgqyjpohphmeyiaf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZndWVzZ3F5anBvaHBobWV5aWFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzOTc2ODAsImV4cCI6MjA2Mzk3MzY4MH0.JZes7O8Q3naGO7RAHzCpIJ4NMRvHkmgw1fCfGLN4MUM';
+// HTMLのDOM構造が完全に読み込まれてからスクリプトを実行
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM fully loaded and parsed. Initializing script...");
 
-// Supabaseクライアントを初期化
-let supabase;
-if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-    supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-} else {
-    console.error("Supabase URLまたはAnon Keyが設定されていません。");
-    alert("Supabaseの設定が正しくありません。script.jsファイルを確認してください。");
-}
+    // 1. SupabaseプロジェクトのURLとanon keyを設定
+    const SUPABASE_URL = 'https://vguesgqyjpohphmeyiaf.supabase.co';
+    // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+    // ★ 必ずSupabaseダッシュボードから新しいAnon Keyをコピーしてここに貼り付けてください！ ★
+    // ★ 古いキーでは動作しない可能性が非常に高いです。                          ★
+    // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+    const SUPABASE_ANON_KEY = 'YOUR_NEW_SUPABASE_ANON_KEY'; // 例: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9. ...'
 
-// HTML要素を取得
-const taskInput = document.getElementById('task-input');
-const addTaskButton = document.getElementById('add-task-button');
-const taskList = document.getElementById('task-list');
+    console.log("Supabase URL:", SUPABASE_URL);
+    console.log("Supabase ANON_KEY (first 10 chars):", SUPABASE_ANON_KEY ? SUPABASE_ANON_KEY.substring(0, 10) + "..." : "NOT SET or EMPTY");
 
-// 2. タスクをSupabaseから取得して表示する関数
-async function fetchTasks() {
-    if (!supabase) {
-        console.error("Supabase client is not initialized.");
-        return;
+
+    // Supabaseクライアントを初期化
+    let supabase;
+
+    // Supabase JSライブラリが読み込まれているか確認
+    if (typeof supabaseJs === 'undefined') {
+        console.error("CRITICAL: Supabase JS library (supabaseJs) is not loaded. Check the script tag in index.html.");
+        alert("Supabaseライブラリが読み込まれていません。index.htmlの<script src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'></script>タグを確認してください。");
+        return; // ライブラリがないと処理を続けられない
     }
 
-    try {
-        // 'todos' テーブルから全てのタスクを選択（作成日時順に並び替え）
-        const { data: todos, error } = await supabase
-            .from('todos')
-            .select('*')
-            .order('created_at', { ascending: false }); // 新しいものが上にくるように
+    if (SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_ANON_KEY !== 'YOUR_NEW_SUPABASE_ANON_KEY') { // キーが初期値のままではないか確認
+        try {
+            supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log("Supabase client initialized:", supabase ? "Success" : "Failed (check URL/Key)");
+        } catch (e) {
+            console.error("CRITICAL: Error initializing Supabase client:", e);
+            alert("Supabaseクライアントの初期化中にエラーが発生しました: " + e.message + "\nURLとAnon Keyを確認してください。");
+            return; // 初期化失敗時は処理を中断
+        }
+    } else {
+        console.error("CRITICAL: Supabase URLまたはAnon Keyが設定されていないか、初期値のままです。script.jsを編集してください。");
+        alert("SupabaseのURLまたはAnon Keyが正しく設定されていません。\nscript.js内のSUPABASE_URLとSUPABASE_ANON_KEYを確認し、特にANON_KEYをSupabaseダッシュボードから取得した新しいものに置き換えてください。");
+        if (document.getElementById('task-list')) {
+            document.getElementById('task-list').innerHTML = '<li>Supabaseの設定が不完全です。script.jsを確認してください。</li>';
+        }
+        return; // 設定がないと処理を中断
+    }
 
-        if (error) {
-            console.error('タスクの取得に失敗しました:', error);
-            // ユーザーへのフィードバックを改善
-            if (error.message.includes("JWTExpired")) {
-                alert('セッションの有効期限が切れました。ページを再読み込みしてください。');
-            } else if (error.message.includes("new row violates row-level security policy")) {
-                 alert('データの取得権限がありません。管理者に確認してください。(RLS Policy)');
-            }
-            else {
-                alert('タスクの取得に失敗しました: ' + error.message);
-            }
+    // HTML要素を取得
+    const taskInput = document.getElementById('task-input');
+    const addTaskButton = document.getElementById('add-task-button');
+    const taskList = document.getElementById('task-list');
+
+    console.log("Checking HTML Elements:");
+    console.log("taskInput:", taskInput ? "Found" : "NOT FOUND - Check ID in index.html");
+    console.log("addTaskButton:", addTaskButton ? "Found" : "NOT FOUND - Check ID in index.html");
+    console.log("taskList:", taskList ? "Found" : "NOT FOUND - Check ID in index.html");
+
+    if (!taskInput || !addTaskButton || !taskList) {
+        console.error("CRITICAL: One or more essential HTML elements are missing. Script cannot proceed correctly.");
+        alert("ページに必要なHTML要素（入力欄、追加ボタン、タスクリスト）のいずれかが見つかりません。index.htmlのID属性を確認してください。");
+        // return; // ここで止めると何も表示されなくなるので、状況によってはコメントアウト
+    }
+
+    // 2. タスクをSupabaseから取得して表示する関数
+    async function fetchTasks() {
+        console.log("fetchTasks: Attempting to fetch tasks...");
+        if (!supabase) {
+            console.error("fetchTasks: Supabase client is not initialized. Cannot fetch.");
             return;
         }
 
-        // リストをクリア
-        taskList.innerHTML = '';
+        try {
+            const { data: todos, error } = await supabase
+                .from('todos')
+                .select('*')
+                .order('created_at', { ascending: false });
 
-        // 取得したタスクをリストに追加
-        if (todos && todos.length > 0) {
-            todos.forEach(todo => {
-                const listItem = document.createElement('li');
+            if (error) {
+                console.error('fetchTasks: タスクの取得に失敗しました:', error);
+                alert('タスクの取得に失敗しました: ' + error.message + '\nSupabaseのRLSポリシーやテーブル名を確認してください。');
+                return;
+            }
 
-                const taskTextSpan = document.createElement('span');
-                taskTextSpan.classList.add('task-text');
-                taskTextSpan.textContent = todo.task;
-                listItem.appendChild(taskTextSpan);
+            console.log("fetchTasks: Tasks fetched successfully:", todos);
+            taskList.innerHTML = ''; // リストをクリア
 
-                // (オプション) 削除ボタンを追加する場合
-                // const deleteButton = document.createElement('button');
-                // deleteButton.classList.add('delete-button');
-                // deleteButton.textContent = '削除';
-                // deleteButton.onclick = async () => {
-                //     await deleteTask(todo.id);
-                // };
-                // listItem.appendChild(deleteButton);
-
-                taskList.appendChild(listItem);
-            });
-        } else if (todos && todos.length === 0) {
-            // タスクがない場合の表示 (任意)
-            const listItem = document.createElement('li');
-            listItem.textContent = '登録されているタスクはありません。';
-            listItem.style.textAlign = 'center';
-            listItem.style.color = '#777';
-            taskList.appendChild(listItem);
-        }
-    } catch (err) {
-        console.error('予期せぬエラー (fetchTasks):', err);
-        alert('タスクの取得中に予期せぬエラーが発生しました。');
-    }
-}
-
-// 3. 新しいタスクをSupabaseに追加する関数
-async function addTask() {
-    if (!supabase) {
-        console.error("Supabase client is not initialized.");
-        return;
-    }
-
-    const taskText = taskInput.value.trim(); // 入力値を取得し、前後の空白を削除
-
-    if (taskText === '') {
-        alert('タスクを入力してください。');
-        return;
-    }
-
-    try {
-        // 'todos' テーブルに新しいタスクを挿入
-        const { data, error } = await supabase
-            .from('todos')
-            .insert([{ task: taskText }]) // `task` カラムに `taskText` を設定
-            .select(); // 挿入したデータを返すようにする (任意)
-
-        if (error) {
-            console.error('タスクの追加に失敗しました:', error);
-            if (error.message.includes("new row violates row-level security policy")) {
-                 alert('タスクの追加権限がありません。管理者に確認してください。(RLS Policy)');
+            if (todos && todos.length > 0) {
+                todos.forEach(todo => {
+                    const listItem = document.createElement('li');
+                    const taskTextSpan = document.createElement('span');
+                    taskTextSpan.classList.add('task-text');
+                    taskTextSpan.textContent = todo.task;
+                    listItem.appendChild(taskTextSpan);
+                    taskList.appendChild(listItem);
+                });
             } else {
-                alert('タスクの追加に失敗しました: ' + error.message);
+                console.log("fetchTasks: No tasks found or todos array is empty.");
+                const listItem = document.createElement('li');
+                listItem.textContent = '登録されているタスクはありません。';
+                listItem.style.textAlign = 'center';
+                listItem.style.color = '#777';
+                taskList.appendChild(listItem);
             }
+        } catch (err) {
+            console.error('fetchTasks: 予期せぬエラー:', err);
+            alert('タスクの取得中に予期せぬエラーが発生しました: ' + err.message);
+        }
+    }
+
+    // 3. 新しいタスクをSupabaseに追加する関数
+    async function addTask() {
+        console.log("addTask: Attempting to add task...");
+        if (!supabase) {
+            console.error("addTask: Supabase client is not initialized. Cannot add.");
             return;
         }
 
-        console.log('タスクが追加されました:', data);
-        taskInput.value = ''; // 入力フィールドをクリア
-        fetchTasks(); // タスクリストを再読み込み
-    } catch (err) {
-        console.error('予期せぬエラー (addTask):', err);
-        alert('タスクの追加中に予期せぬエラーが発生しました。');
-    }
-}
-
-// (オプション) タスクを削除する関数
-// async function deleteTask(id) {
-//     if (!supabase) {
-//         console.error("Supabase client is not initialized.");
-//         return;
-//     }
-//     try {
-//         const { error } = await supabase
-//             .from('todos')
-//             .delete()
-//             .match({ id: id });
-//
-//         if (error) {
-//             console.error('タスクの削除に失敗しました:', error);
-//             alert('タスクの削除に失敗しました: ' + error.message);
-//             return;
-//         }
-//         console.log('タスクが削除されました:', id);
-//         fetchTasks(); // タスクリストを再読み込み
-//     } catch (err) {
-//         console.error('予期せぬエラー (deleteTask):', err);
-//         alert('タスクの削除中に予期せぬエラーが発生しました。');
-//     }
-// }
-
-
-// イベントリスナーを設定
-if (addTaskButton) {
-    addTaskButton.addEventListener('click', addTask);
-} else {
-    console.error("Element with id 'add-task-button' not found.");
-}
-
-if (taskInput) {
-    taskInput.addEventListener('keypress', (event) => {
-        if (event.key === 'Enter') {
-            addTask();
+        if (!taskInput) {
+            console.error("addTask: taskInput element not found.");
+            alert("タスク入力欄が見つかりません。");
+            return;
         }
-    });
-} else {
-    console.error("Element with id 'task-input' not found.");
-}
+        const taskText = taskInput.value.trim();
 
-// ページ読み込み時にタスクを取得して表示
-// Supabaseクライアントが初期化されていることを確認してからfetchTasksを呼び出す
-if (supabase) {
-    fetchTasks();
-} else {
-    // HTML要素が存在する場合、エラーメッセージを表示
-    if (taskList) {
-        taskList.innerHTML = '<li>Supabaseクライアントの初期化に失敗しました。設定を確認してください。</li>';
+        if (taskText === '') {
+            alert('タスクを入力してください。');
+            return;
+        }
+        console.log("addTask: Task text:", taskText);
+
+        try {
+            const { data, error } = await supabase
+                .from('todos')
+                .insert([{ task: taskText }])
+                .select();
+
+            if (error) {
+                console.error('addTask: タスクの追加に失敗しました:', error);
+                alert('タスクの追加に失敗しました: ' + error.message + '\nSupabaseのRLSポリシーやテーブル/カラム名を確認してください。');
+                return;
+            }
+
+            console.log('addTask: タスクが追加されました:', data);
+            taskInput.value = '';
+            fetchTasks(); // タスクリストを再読み込み
+        } catch (err) {
+            console.error('addTask: 予期せぬエラー:', err);
+            alert('タスクの追加中に予期せぬエラーが発生しました: ' + err.message);
+        }
     }
-}
+
+    // イベントリスナーを設定
+    if (addTaskButton) {
+        addTaskButton.addEventListener('click', () => {
+            console.log("EVENT: Add task button clicked.");
+            addTask();
+        });
+        console.log("Event listener for addTaskButton successfully ADDED.");
+    } else {
+        console.error("CRITICAL: Could not add event listener because addTaskButton was not found.");
+    }
+
+    if (taskInput) {
+        taskInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                console.log("EVENT: Enter key pressed in taskInput.");
+                addTask();
+            }
+        });
+        console.log("Event listener for taskInput (keypress) successfully ADDED.");
+    } else {
+        console.error("Could not add event listener because taskInput was not found.");
+    }
+
+    // ページ読み込み時にタスクを取得して表示
+    if (supabase) {
+        console.log("Initial task fetch on page load...");
+        fetchTasks();
+    } else {
+        console.error("Cannot perform initial task fetch: Supabase client is not initialized.");
+        // このメッセージは既にクライアント初期化失敗時に表示されている可能性あり
+    }
+
+    console.log("Script initialization finished.");
+});
