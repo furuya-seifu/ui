@@ -6,7 +6,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
 // DOM取得
-const messageEl = document.getElementById('message');
+const messageEl = document.getElementById('messages');
 const btn = document.getElementById('generateBtn');
 
 let messages = [];
