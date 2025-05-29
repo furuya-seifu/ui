@@ -11,14 +11,17 @@ const btn = document.getElementById('generateBtn');
 
 let messages = [];
 
-// メッセージ取得
+// メッセージをSupabaseから取得
 async function fetchMessages() {
   try {
     const { data, error } = await supabase
       .from('messages')
       .select('text');
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabaseエラー:', error);
+      throw error;
+    }
 
     messages = data.map(row => row.text);
 
@@ -29,17 +32,17 @@ async function fetchMessages() {
       messageEl.textContent = 'メッセージが見つかりませんでした。';
     }
   } catch (err) {
-    console.error('Supabaseからの取得エラー:', err);
+    console.error('取得時の例外:', err);
     messageEl.textContent = 'エラーが発生しました。後でもう一度お試しください。';
   }
 }
 
+// ボタンを押したらランダム表示
 btn.addEventListener('click', () => {
   if (messages.length === 0) return;
   const randomIndex = Math.floor(Math.random() * messages.length);
   messageEl.textContent = messages[randomIndex];
 });
 
-// 初回実行
+// 初回読み込み
 fetchMessages();
-
