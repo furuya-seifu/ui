@@ -1,80 +1,22 @@
-// SupabaseのURLとキー
-const SUPABASE_URL = 'https://vguesgqyjpohphmeyiaf.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZndWVzZ3F5anBvaHBobWV5aWFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzOTc2ODAsImV4cCI6MjA2Mzk3MzY4MH0.JZes7O8Q3naGO7RAHzCpIJ4NMRvHkmgw1fCfGLN4MUM';
+const messages = [
+  "継続は力なり。今日の努力が未来を作る。",
+  "できるまでやる。やめたらそこで試合終了。",
+  "失敗は成功のもと。恐れず挑戦しよう。",
+  "一歩ずつでも前に進むことが大事。",
+  "勉強は自分への最高の投資。",
+  "努力は裏切らない。信じて続けよう。",
+  "小さな積み重ねが大きな成果を生む。",
+  "今の頑張りが明日の自信になる。",
+  "夢は見るものじゃない。叶えるものだ。",
+  "やればできる。あとはやるかやらないか。",
+  "諦めたらそこで試合終了。最後まで走り切ろう。",
+  "知識は力。今日もたくさん吸収しよう！"
+];
 
-// Supabaseクライアント初期化
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const messageEl = document.getElementById('message');
+const btn = document.getElementById('generateBtn');
 
-const container = document.getElementById('sweets-container');
-const modalBg = document.getElementById('modal-bg');
-const modalImg = document.getElementById('modal-img');
-const modalTitle = document.getElementById('modal-title');
-const modalDesc = document.getElementById('modal-desc');
-const modalClose = document.getElementById('modal-close');
-
-let sweetsData = [];
-
-// データ取得
-async function loadSweets() {
-  const { data, error } = await supabase
-    .from('sweets')
-    .select('*');
-
-  if(error) {
-    console.error('データ取得エラー:', error);
-    container.textContent = 'お菓子のデータを読み込めませんでした。';
-    return;
-  }
-
-  sweetsData = data;
-
-  data.forEach((sweet, index) => {
-    const card = createCard(sweet, index);
-    container.appendChild(card);
-  });
-}
-
-// カード作成
-function createCard(sweet, index) {
-  const card = document.createElement('div');
-  card.className = 'card';
-
-  card.innerHTML = `
-    <img src="${sweet.img}" alt="${sweet.title}" />
-    <div class="card-body">
-      <h3>${sweet.title}</h3>
-      <p>${sweet.description}</p>
-      <button class="btn-detail" data-index="${index}">詳細を見る</button>
-    </div>
-  `;
-
-  return card;
-}
-
-// 詳細ボタンイベント
-container.addEventListener('click', (e) => {
-  if(e.target.classList.contains('btn-detail')) {
-    const idx = e.target.getAttribute('data-index');
-    const sweet = sweetsData[idx];
-
-    modalImg.src = sweet.img;
-    modalTitle.textContent = sweet.title;
-    modalDesc.textContent = sweet.description;
-    modalBg.style.display = 'flex';
-  }
+btn.addEventListener('click', () => {
+  const randomIndex = Math.floor(Math.random() * messages.length);
+  messageEl.textContent = messages[randomIndex];
 });
-
-// モーダル閉じる
-modalClose.addEventListener('click', () => {
-  modalBg.style.display = 'none';
-});
-
-// 背景クリックで閉じる
-modalBg.addEventListener('click', (e) => {
-  if(e.target === modalBg) {
-    modalBg.style.display = 'none';
-  }
-});
-
-// ページロード時にデータ取得
-window.addEventListener('DOMContentLoaded', loadSweets);
